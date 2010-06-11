@@ -47,7 +47,6 @@ public class MongoDBTest extends ClusterTestCase {
     }
 
 
-    @Test
     public void testMongoDBWrites() throws Exception {
 
         //Create new document from source data.
