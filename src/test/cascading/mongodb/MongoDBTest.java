@@ -29,10 +29,10 @@ public class MongoDBTest extends ClusterTestCase {
 
     String inputFile = "src/test/data/testdata.txt";
 
-    private static final String HOST = "localhost";
-    private static final int PORT = 27017;
-    private static final String COLLECTION = "cascadingtest";
-    private static final String DB = "testdb";
+    static final String HOST = "localhost";
+    static final int PORT = 27017;
+    static final String COLLECTION = "cascadingtest";
+    static final String DB = "testdb";
 
     public MongoDBTest() {
         super("mongodb tap test", false);
