@@ -5,6 +5,7 @@ import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
 import cascading.operation.Debug;
 import cascading.operation.DebugLevel;
+import cascading.operation.Identity;
 import cascading.operation.regex.RegexSplitter;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
@@ -32,7 +33,7 @@ public class MongoDBTest extends ClusterTestCase {
     static final String HOST = "localhost";
     static final int PORT = 27017;
     static final String COLLECTION = "cascadingtest";
-    static final String DB = "testdb";
+    static final String DB = "gameattain";
 
     public MongoDBTest() {
         super("mongodb tap test", false);
@@ -58,7 +59,7 @@ public class MongoDBTest extends ClusterTestCase {
         Tap source = new Lfs(new TextLine(), inputFile);
         parsePipe = new Each(parsePipe, new Fields("line"), new RegexSplitter(tupleFields, "\\s"));
 
-        Tap mongoTap = new MongoDBTap(HOST, PORT, DB, COLLECTION, new MongoDBScheme(MongoDBOutputFormat.class), new DefaultMongoDocument(selector));
+        Tap mongoTap = new MongoDBTap(HOST, PORT, DB, COLLECTION, new MongoDBScheme(MongoDBOutputFormat.class, null), new DefaultMongoDocument(selector));
 
         Properties props = new Properties();
         Flow parseFlow = new FlowConnector(props).connect(source, mongoTap, parsePipe);
@@ -66,6 +67,24 @@ public class MongoDBTest extends ClusterTestCase {
         parseFlow.complete();
 
     }
+
+    public void testMongoDBReads() throws Exception
+    {
+        Pipe newPipe = new Pipe("read");
+        Fields tupleFields = new Fields("letter", "number", "symbol");
+        Fields selector = new Fields("letter", "number");
+
+        Tap source = new MongoDBTap(HOST, PORT, DB, COLLECTION, new MongoDBScheme(null, MongoDBInputFormat.class), new DefaultMongoDocument(selector));
+        newPipe = new Each(newPipe, Fields.ALL, new Identity());
+
+        Tap sink = new Lfs(new TextLine(), "file:///tmp/reads.txt");
+
+        Properties props = new Properties();
+        Flow readFlow = new FlowConnector(props).connect(source, sink, newPipe);
+
+        readFlow.complete();
+    }
+
 
     private void verifySink(Flow flow, int expects) throws IOException {
         int count = 0;
