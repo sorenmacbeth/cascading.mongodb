@@ -10,6 +10,7 @@ import cascading.operation.regex.RegexSplitter;
 import cascading.pipe.Each;
 import cascading.pipe.Pipe;
 import cascading.scheme.TextLine;
+import cascading.tap.Hfs;
 import cascading.tap.Lfs;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
@@ -92,7 +93,7 @@ public class MongoDBTest extends ClusterTestCase {
         Tap source = new MongoDBTap(HOST, PORT, DB, COLLECTION, USER, PASS, new MongoDBScheme(MongoDBInputFormat.class), new DefaultMongoDocument(selector));
         newPipe = new Each(newPipe, Fields.ALL, new Identity());
 
-        Tap sink = new Lfs(new TextLine(), "file:///tmp/reads.txt");
+        Tap sink = new Hfs(new TextLine(), "hdfs://staging.gameattain.com:8020/user/hadoop/training/");
 
         Properties props = new Properties();
         Flow readFlow = new FlowConnector(props).connect(source, sink, newPipe);
@@ -110,7 +111,7 @@ public class MongoDBTest extends ClusterTestCase {
 
         pipe = new Each(pipe, Fields.ALL, new Identity(new Fields("title", "article")));
 
-        Tap sink = new Lfs(new TextLine(), "file:///tmp/training");
+        Tap sink = new Hfs(new TextLine(), "hdfs://staging.gameattain.com:8020/user/hadoop/training/");
 
         Properties props = new Properties();
         Flow readFlow = new FlowConnector(props).connect(source, sink, pipe);
