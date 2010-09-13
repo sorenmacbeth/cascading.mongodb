@@ -3,8 +3,8 @@ package cascading.mongodb;
 import cascading.ClusterTestCase;
 import cascading.flow.Flow;
 import cascading.flow.FlowConnector;
-import cascading.operation.Debug;
-import cascading.operation.DebugLevel;
+import cascading.mongodb.document.DefaultMongoDocument;
+import cascading.mongodb.document.GameDocument;
 import cascading.operation.Identity;
 import cascading.operation.regex.RegexSplitter;
 import cascading.pipe.Each;
@@ -14,10 +14,6 @@ import cascading.tap.Lfs;
 import cascading.tap.Tap;
 import cascading.tuple.Fields;
 import cascading.tuple.TupleEntryIterator;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
-import com.mongodb.Mongo;
-import org.junit.Test;
 
 import java.io.IOException;
 import java.util.Properties;
@@ -93,13 +89,33 @@ public class MongoDBTest extends ClusterTestCase {
         Fields tupleFields = new Fields("letter", "number", "symbol");
         Fields selector = new Fields("letter", "number");
 
-        Tap source = new MongoDBTap(HOST, PORT, DB, COLLECTION, USER, PASS, new MongoDBScheme(null, MongoDBInputFormat.class), new DefaultMongoDocument(selector));
+        Tap source = new MongoDBTap(HOST, PORT, DB, COLLECTION, USER, PASS, new MongoDBScheme(MongoDBInputFormat.class), new DefaultMongoDocument(selector));
         newPipe = new Each(newPipe, Fields.ALL, new Identity());
 
         Tap sink = new Lfs(new TextLine(), "file:///tmp/reads.txt");
 
         Properties props = new Properties();
         Flow readFlow = new FlowConnector(props).connect(source, sink, newPipe);
+
+        readFlow.complete();
+    }
+
+    public void testRemoteGameDocumentReads() throws Exception
+    {
+        Pipe pipe = new Pipe("Read Games");
+        Fields outputSelector = new Fields("title", "article");
+
+        GameDocument queryDocument = new GameDocument(outputSelector);
+        queryDocument.setReleaseDate("1997");
+        queryDocument.setTitle("The Last Express");
+        Tap source = new MongoDBTap(HOST, PORT, DB, "games", USER, PASS, new MongoDBScheme(null, MongoDBInputFormat.class), queryDocument);
+
+        pipe = new Each(pipe, Fields.ALL, new Identity(new Fields("title", "article")));
+
+        Tap sink = new Lfs(new TextLine(), "file:///tmp/training");
+
+        Properties props = new Properties();
+        Flow readFlow = new FlowConnector(props).connect(source, sink, pipe);
 
         readFlow.complete();
     }
