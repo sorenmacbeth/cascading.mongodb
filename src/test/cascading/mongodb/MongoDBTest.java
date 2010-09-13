@@ -106,8 +106,6 @@ public class MongoDBTest extends ClusterTestCase {
         Fields outputSelector = new Fields("title", "article");
 
         GameDocument queryDocument = new GameDocument(outputSelector);
-        queryDocument.setReleaseDate("1997");
-        queryDocument.setTitle("The Last Express");
         Tap source = new MongoDBTap(HOST, PORT, DB, "games", USER, PASS, new MongoDBScheme(null, MongoDBInputFormat.class), queryDocument);
 
         pipe = new Each(pipe, Fields.ALL, new Identity(new Fields("title", "article")));
